@@ -126,7 +126,8 @@ CREATE TABLE
 
 
  Ques 10:-> Drop the "inventory" database
-Query :-> DROP DATABASE inventory;
+Query :-> DROP DATAo
+BASE inventory;
 
 OUTPUT:
 
