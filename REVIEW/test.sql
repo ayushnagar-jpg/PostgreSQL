@@ -20,8 +20,9 @@ CREATE DATABASE
                  |          |          |                 |                            |                            |        |           | postgres=CTc/postgres
  university      | postgres | UTF8     | libc            | English_United States.1252 | English_United States.1252 |        |           | 
 (12 rows)
-
+You are tasked with designing a database for a library system. The database should track books, members, and borrowing activities.
 CREATE DATABASE
+* Books with columns: book_id, title, author, publication_year, genre
 CREATE TABLE
          List of relations
  Schema | Name  | Type  |  Owner   
@@ -39,7 +40,7 @@ CREATE TABLE
  genre            | character varying(20) |           |          | 
 Indexes:
     "books_pkey" PRIMARY KEY, btree (book_id)
-
+* Members with columns: member_id, name, address, contact_number.
 CREATE TABLE
                                          Table "public.members"
    Column   |         Type          | Collation | Nullable |                  Default                   
@@ -50,7 +51,7 @@ CREATE TABLE
  contact_no | integer               |           |          | 
 Indexes:
     "members_pkey" PRIMARY KEY, btree (member_id)
-
+* Borrowings with columns: borrowing_id, book_id, member_id, borrow_date, due_date, returned_date.
 CREATE TABLE
                                      Table "public.borrowings"
     Column     |  Type   | Collation | Nullable |                     Default                      
@@ -66,6 +67,10 @@ Indexes:
 Foreign-key constraints:
     "borrowings_book_id_fkey" FOREIGN KEY (book_id) REFERENCES books(book_id)
     "borrowings_member_id_fkey" FOREIGN KEY (member_id) REFERENCES members(member_id)
+
+
+* DML (Data Manipulation Language):
+   * Insert sample data into each table (at least 5 records per table).
 
 INSERT 0 6
                                            Table "public.books"
@@ -151,6 +156,11 @@ INSERT 0 1
             6 |       5 |         5 | 2025-09-01  | 2025-09-05 | 2025-10-07
 (5 rows)
 
+ * DQL (Data Query Language):
+   * Write queries to:
+     * Retrieve all books by a specific author.
+
+
  book_id | title | author | publication_year |   genre    
 ---------+-------+--------+------------------+------------
        1 | book1 | Ayush  | 2004-01-01 BC    | Healthcare
@@ -159,9 +169,90 @@ INSERT 0 1
  book_id | title | author | publication_year | genre 
 ---------+-------+--------+------------------+-------
 (0 rows)
+* Find members who have borrowed a particular book.
 
  member_id | name | contact_no 
 -----------+------+------------
          2 | abay |  987654322
 (1 row)
 
+Ques 3 :-> Retrieve all books by a specific author.
+Query: SELECT * FROM Books WHERE author = 'author3';
+
+ book_id | title | author  | publication_year | genre  
+---------+-------+---------+------------------+--------
+       3 | Book3 | author3 |             2022 | genre3
+(1 row)
+
+
+Ques4 :->  Find members who have borrowed a particular book.
+Query: SELECT member_id FROM Borrowings WHERE book_id = 2;
+ member_id 
+-----------
+         2
+(1 row)
+
+
+Ques5 :->  Display books that are currently overdue. 
+Query: SELECT title FROM books WHERE book_id IN (SELECT book_id FROM Borrowings WHERE due_date<return_date);
+
+ title 
+-------
+ Book1
+ Book2
+ Book3
+ Book4
+ Book5
+(5 rows)
+
+
+Ques 6 :-> Calculate the total number of books borrowed by each member. 
+Query: SELECT member_id, (SELECT COUNT(*) FROM Borrowings WHERE Borrowings.member_id = Members.member_id) AS total_borrowed FROM Members;
+
+ member_id | total_borrowed 
+-----------+----------------
+         1 |              1
+         2 |              1
+         3 |              1
+         4 |              1
+         5 |              1
+(5 rows)
+
+
+Ques 7 :-> Demonstrate the use of COMMIT and ROLLBACK in a scenario where a member borrows a book, but the transaction needs to be canceled due to an error.
+Queries: START TRANSACTION;
+
+INSERT INTO Borrowings(book_id, member_id, borrow_date, return_date, due_date) VALUES (1, 2, '2025-03-10', '2025-03-25', '2025-03-15');
+
+COMMIT;
+
+ROLLBACK;
+
+Output: 
+START TRANSACTION
+INSERT 0 1
+COMMIT
+ROLLBACK
+
+Ques 8 :-> Write a query to display the member's name, book title, and borrow date for all borrowing activities. Use an appropriate join to relate the Borrowings, Members, and Books tables.
+Query: 
+SELECT 
+    m.name AS member_name, 
+    b.title AS book_title, 
+    br.borrow_date
+FROM 
+    Borrowings br
+JOIN 
+    Members m ON br.member_id = m.member_id
+JOIN 
+    Books b ON br.book_id = b.book_id;
+Output:
+member_name | book_title | borrow_date 
+-------------+------------+-------------
+ Ayush       | Book1      | 2025-01-01
+ Abhinav     | Book2      | 2025-01-02
+ Vishal      | Book3      | 2025-01-03
+ Varun       | Book4      | 2025-01-04
+ Priyanshu   | Book5      | 2025-01-05
+ Abhinav     | Book1      | 2025-03-10
+(6 rows)
